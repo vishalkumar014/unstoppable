@@ -3,6 +3,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils.decorators import method_decorator
 from rest_framework.permissions import AllowAny
+from django.middleware.csrf import get_token
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .functions import generateToken
@@ -10,13 +11,16 @@ from rest_framework import status
 from .serializers import *
 
 
-@method_decorator(ensure_csrf_cookie, name='dispatch')
 class CSRFTokenAPIView(APIView):
     permission_classes = [AllowAny]
+    @method_decorator(ensure_csrf_cookie)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
     def get(self, request):
-        context={}
+        context = {}
         context['message'] = 'CSRF Cookie Set'
-        context['status']  =  True
+        context['status'] = True
+        context['rf_token'] = get_token(request)
         return Response(context, status=status.HTTP_200_OK)
 
 
